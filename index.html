@@ -2,8 +2,7 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>  VAR </title>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <title> VAR</title>
   <style>
     html, body {
       margin: 0;
@@ -61,7 +60,7 @@
 <body>
   <div class="video-wrapper" id="container">
     <div id="click-to-start">اضغط لبدء التشغيل</div>
-    <video id="video" playsinline controls></video>
+    <video id="video" playsinline controls src="http://cdnvine.com:8080/bn1hd/index.m3u8"></video>
   </div>
 
   <script>
@@ -73,7 +72,6 @@
 
       document.getElementById('click-to-start').style.display = 'none';
 
-      // محاولة قفل الوضع الأفقي
       if (screen.orientation && screen.orientation.lock) {
         try {
           await screen.orientation.lock('landscape');
@@ -83,28 +81,15 @@
       }
 
       const video = document.getElementById('video');
-      const videoSrc = 'http://cdnvine.com:8080/bn1hd/index.m3u8';
 
-      if (Hls.isSupported()) {
-        const hls = new Hls();
-        hls.loadSource(videoSrc);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, function () {
-          video.play();
-          video.style.opacity = 1;
-        });
-        hls.on(Hls.Events.ERROR, function (event, data) {
-          console.error('HLS.js Error:', data);
-          alert('حدث خطأ أثناء التشغيل: ' + data.details);
-        });
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = videoSrc;
-        video.addEventListener('loadedmetadata', function () {
-          video.play();
-          video.style.opacity = 1;
-        });
-      } else {
-        alert('هذا المتصفح لا يدعم HLS');
+      video.addEventListener('canplay', () => {
+        video.style.opacity = 1;
+      });
+
+      try {
+        await video.play();
+      } catch (e) {
+        alert("فشل تشغيل الفيديو: " + e.message);
       }
     }
 
@@ -137,11 +122,7 @@
       if (!document.fullscreenElement) {
         video.style.objectFit = 'contain';
       } else {
-        if (isLandscape) {
-          video.style.objectFit = 'fill';
-        } else {
-          video.style.objectFit = 'contain';
-        }
+        video.style.objectFit = isLandscape ? 'fill' : 'contain';
       }
     }
 
