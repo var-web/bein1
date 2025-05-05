@@ -1,0 +1,153 @@
+<!DOCTYPE html>  
+<html lang="ar">  
+<head>  
+  <meta charset="UTF-8">  
+  <title>مشغل فيديو Landscape Stretch</title>  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.ui.min.js"></script>  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/controls.min.css" />  
+  <style>  
+    html, body {  
+      margin: 0;  
+      padding: 0;  
+      background: #000;  
+      width: 100%;  
+      height: 100%;  
+      overflow: hidden;  
+      display: flex;  
+      justify-content: center;  
+      align-items: center;  
+    }  
+  
+    .video-wrapper {  
+      width: 100vw;  
+      height: 100vh;  
+      background: black;  
+      position: relative;  
+      display: flex;  
+      justify-content: center;  
+      align-items: center;  
+      transition: width 0.5s ease, height 0.5s ease;
+    }  
+  
+    video {      
+      width: 100%;      
+      height: 100%;      
+      object-fit: contain;       
+      background-color: black;      
+      opacity: 0;      
+      transition: opacity 0.5s ease, object-fit 0.5s ease;      
+    }
+  
+    #click-to-start {
+      position: absolute;
+      z-index: 10;
+      color: white;
+      font-size: clamp(16px, 4vw, 28px);
+      background: rgba(0, 0, 0, 0.5);
+      padding: 12px 24px;
+      border-radius: 10px;
+      user-select: none;
+      cursor: pointer;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      white-space: nowrap;
+      max-width: 90vw;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }  
+  </style>  
+</head>  
+<body>  
+  <div class="video-wrapper" id="container">  
+    <div id="click-to-start">اضغط لبدء التشغيل</div>  
+    <video id="video" data-shaka-player playsinline></video>  
+  </div>  
+  
+  <script>  
+    let started = false;  
+  
+    async function initApp() {  
+      if (started) return;  
+      started = true;  
+  
+      document.getElementById('click-to-start').style.display = 'none';  
+  
+      if (screen.orientation && screen.orientation.lock) {  
+        try {  
+          await screen.orientation.lock('landscape');  
+        } catch (e) {  
+          console.warn('فشل قفل الشاشة في الوضع الأفقي:', e);  
+        }  
+      }  
+  
+      const video = document.getElementById('video');  
+      const ui = video['ui'];  
+      const controls = ui.getControls();  
+      const player = controls.getPlayer();  
+  
+      player.addEventListener('error', e => {  
+        console.error('Shaka Error:', e.detail);  
+        alert('خطأ في التشغيل: ' + JSON.stringify(e.detail));  
+      });  
+  
+      try {  
+        await player.load('http://cdnvine.com:8080/bn1hd/index.m3u8');  
+        await video.play();  
+        video.style.opacity = 1;  
+        console.log("تم تشغيل الفيديو");  
+      } catch (e) {  
+        console.error('فشل التحميل:', e);  
+      }  
+    }  
+  
+    document.getElementById('container').addEventListener('click', () => {  
+      initApp();  
+    });
+
+    function checkOrientation() {
+      const wrapper = document.querySelector('.video-wrapper');
+      const isLandscape = window.innerWidth > window.innerHeight;
+
+      if (!document.fullscreenElement) {
+        if (isLandscape) {
+          wrapper.style.width = '70vw';
+          wrapper.style.height = '70vh';
+        } else {
+          wrapper.style.width = '100vw';
+          wrapper.style.height = '100vh';
+        }
+      } else {
+        wrapper.style.width = '100vw';
+        wrapper.style.height = '100vh';
+      }
+    }
+
+    document.addEventListener('fullscreenchange', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    window.addEventListener('resize', checkOrientation);
+    checkOrientation();
+
+    function adjustVideoFit() {
+      const video = document.getElementById('video');
+      const isLandscape = window.innerWidth > window.innerHeight;
+      
+      if (!document.fullscreenElement) {
+        video.style.objectFit = 'contain';
+      } else {
+        if (isLandscape) {
+          video.style.objectFit = 'fill';
+        } else {
+          video.style.objectFit = 'contain';
+        }
+      }
+    }
+
+    document.addEventListener('fullscreenchange', adjustVideoFit);
+    window.addEventListener('resize', adjustVideoFit);
+    window.addEventListener('orientationchange', adjustVideoFit);
+    adjustVideoFit();
+  </script>  
+</body>  
+</html>
